@@ -1,3 +1,10 @@
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
+from builtins import open
+from future import standard_library
+standard_library.install_aliases()
 import json
 import platform
 import tempfile
@@ -6,14 +13,25 @@ from os import path, getcwd
 from cffi import FFI
 from conans.client import conan_api
 from importlib_resources import read_text
+import sys
+import shutil
 
 conan, _, _ = conan_api.ConanAPIV1.factory()
 
 # Use Conan to install libwebp
-with tempfile.TemporaryDirectory() as tmp_dir:
-    conan.install(path=getcwd(), cwd=tmp_dir)
-    with open(path.join(tmp_dir, 'conanbuildinfo.json'), 'r') as f:
-        conan_info = json.load(f)
+if sys.version_info[0] == 3:
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        conan.install(path=getcwd(), cwd=tmp_dir)
+        with open(path.join(tmp_dir, 'conanbuildinfo.json'), 'r') as f:
+            conan_info = json.load(f)
+else:
+    tmp_dir = tempfile.mkdtemp()
+    try:
+        conan.install(path=getcwd(), cwd=tmp_dir)
+        with open(path.join(tmp_dir, 'conanbuildinfo.json'), 'r') as f:
+            conan_info = json.load(f)
+    finally:
+        shutil.rmtree(tmp_dir) 
 
 # Find header files and libraries in libwebp
 extra_objects = []

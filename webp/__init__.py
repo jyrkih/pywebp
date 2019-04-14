@@ -1,8 +1,21 @@
+from __future__ import division
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import (
+         bytes, dict, int, list, object, range, str,
+         ascii, chr, hex, input, next, oct, open,
+         pow, round, super,
+         filter, map, zip)
+from builtins import str
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 from enum import Enum
 
 import numpy as np
 from PIL import Image
-
+import sys
 from _webp import ffi, lib
 
 
@@ -36,7 +49,7 @@ class WebPError(Exception):
     pass
 
 
-class WebPConfig:
+class WebPConfig(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -62,7 +75,11 @@ class WebPConfig:
     @staticmethod
     def new(preset=WebPPreset.DEFAULT, quality=75, lossless=False):
         ptr = ffi.new('WebPConfig*')
-        if lib.WebPConfigPreset(ptr, preset.value, quality) == 0:
+        if sys.version_info[0] == 3:
+            _preset = preset.value
+        else:
+            _preset = preset
+        if lib.WebPConfigPreset(ptr, _preset, quality) == 0:
             raise WebPError('failed to load config from preset')
         config = WebPConfig(ptr)
         config.lossless = lossless
@@ -71,7 +88,7 @@ class WebPConfig:
         return config
 
 
-class WebPData:
+class WebPData(object):
     def __init__(self, ptr, data_ref):
         self.ptr = ptr
         self._data_ref = data_ref
@@ -107,7 +124,12 @@ class WebPData:
 
         arr = np.empty((dec_config.input.height, dec_config.input.width, bytes_per_pixel),
                        dtype=np.uint8)
-        dec_config.output.colorspace = color_mode.value
+        if sys.version_info[0] == 3:
+            _color_mode = color_mode.value
+        else:
+            _color_mode = color_mode
+
+        dec_config.output.colorspace = _color_mode
         dec_config.output.u.RGBA.rgba = ffi.cast('uint8_t*', ffi.from_buffer(arr))
         dec_config.output.u.RGBA.size = arr.size
         dec_config.output.u.RGBA.stride = dec_config.input.width * bytes_per_pixel
@@ -131,7 +153,7 @@ class WebPData:
 
 # This internal class wraps a WebPData struct in its "unfinished" state (ie
 # before bytes and size have been set)
-class _WebPData:
+class _WebPData(object):
     def __init__(self):
         self.ptr = ffi.new('WebPData*')
         lib.WebPDataInit(self.ptr)
@@ -143,7 +165,7 @@ class _WebPData:
         return webp_data
 
 
-class WebPMemoryWriter:
+class WebPMemoryWriter(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -166,7 +188,7 @@ class WebPMemoryWriter:
         return WebPMemoryWriter(ptr)
 
 
-class WebPPicture:
+class WebPPicture(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -195,7 +217,9 @@ class WebPPicture:
         return WebPPicture(ptr)
 
     @staticmethod
-    def from_numpy(arr, *, pilmode=None):
+    def from_numpy(arr, **_3to2kwargs):
+        if 'pilmode' in _3to2kwargs: pilmode = _3to2kwargs['pilmode']; del _3to2kwargs['pilmode']
+        else: pilmode = None
         ptr = ffi.new('WebPPicture*')
         if lib.WebPPictureInit(ptr) == 0:
             raise WebPError('version mismatch')
@@ -228,7 +252,7 @@ class WebPPicture:
         return WebPPicture.from_numpy(np.asarray(img), pilmode=img.mode)
 
 
-class WebPDecoderConfig:
+class WebPDecoderConfig(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -258,7 +282,7 @@ class WebPDecoderConfig:
         return WebPDecoderConfig(ptr)
 
 
-class WebPAnimEncoderOptions:
+class WebPAnimEncoderOptions(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -289,7 +313,7 @@ class WebPAnimEncoderOptions:
         return enc_opts
 
 
-class WebPAnimEncoder:
+class WebPAnimEncoder(object):
     def __init__(self, ptr, enc_opts):
         self.ptr = ptr
         self.enc_opts = enc_opts
@@ -326,7 +350,7 @@ class WebPAnimEncoder:
         return WebPAnimEncoder(ptr, enc_opts)
 
 
-class WebPAnimDecoderOptions:
+class WebPAnimDecoderOptions(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -336,7 +360,11 @@ class WebPAnimDecoderOptions:
 
     @color_mode.setter
     def color_mode(self, color_mode):
-        self.ptr.color_mode = color_mode.value
+        if sys.version_info[0] == 3:
+            _color_mode = color_mode.value
+        else:
+            _color_mode = color_mode
+        self.ptr.color_mode = _color_mode
 
     @property
     def use_threads(self):
@@ -357,7 +385,7 @@ class WebPAnimDecoderOptions:
         return dec_opts
 
 
-class WebPAnimInfo:
+class WebPAnimInfo(object):
     def __init__(self, ptr):
         self.ptr = ptr
 
@@ -379,7 +407,7 @@ class WebPAnimInfo:
         return WebPAnimInfo(ptr)
 
 
-class WebPAnimDecoder:
+class WebPAnimDecoder(object):
     def __init__(self, ptr, dec_opts, anim_info):
         self.ptr = ptr
         self.dec_opts = dec_opts
@@ -431,7 +459,13 @@ class WebPAnimDecoder:
         return WebPAnimDecoder(ptr, dec_opts, anim_info)
 
 
-def imwrite(file_path, arr, *, quality=75, lossless=False, pilmode=None):
+def imwrite(file_path, arr, **_3to2kwargs):
+    if 'pilmode' in _3to2kwargs: pilmode = _3to2kwargs['pilmode']; del _3to2kwargs['pilmode']
+    else: pilmode = None
+    if 'lossless' in _3to2kwargs: lossless = _3to2kwargs['lossless']; del _3to2kwargs['lossless']
+    else: lossless = False
+    if 'quality' in _3to2kwargs: quality = _3to2kwargs['quality']; del _3to2kwargs['quality']
+    else: quality = 75
     """Encode numpy array image with WebP and save to file.
 
     Args:
@@ -449,7 +483,9 @@ def imwrite(file_path, arr, *, quality=75, lossless=False, pilmode=None):
         f.write(buf)
 
 
-def imread(file_path, *, pilmode='RGBA'):
+def imread(file_path, **_3to2kwargs):
+    if 'pilmode' in _3to2kwargs: pilmode = _3to2kwargs['pilmode']; del _3to2kwargs['pilmode']
+    else: pilmode = 'RGBA'
     """Load from file and decode numpy array with WebP.
 
     Args:
@@ -474,7 +510,15 @@ def imread(file_path, *, pilmode='RGBA'):
     return arr
 
 
-def mimwrite(file_path, arrs, *, fps=30, quality=75, lossless=False, pilmode=None):
+def mimwrite(file_path, arrs, **_3to2kwargs):
+    if 'pilmode' in _3to2kwargs: pilmode = _3to2kwargs['pilmode']; del _3to2kwargs['pilmode']
+    else: pilmode = None
+    if 'lossless' in _3to2kwargs: lossless = _3to2kwargs['lossless']; del _3to2kwargs['lossless']
+    else: lossless = False
+    if 'quality' in _3to2kwargs: quality = _3to2kwargs['quality']; del _3to2kwargs['quality']
+    else: quality = 75
+    if 'fps' in _3to2kwargs: fps = _3to2kwargs['fps']; del _3to2kwargs['fps']
+    else: fps = 30
     """Encode a sequence of PIL Images with WebP and save to file.
 
     Args:
@@ -499,7 +543,13 @@ def mimwrite(file_path, arrs, *, fps=30, quality=75, lossless=False, pilmode=Non
         f.write(anim_data.buffer())
 
 
-def mimread(file_path, *, fps=None, use_threads=True, pilmode='RGBA'):
+def mimread(file_path, **_3to2kwargs):
+    if 'pilmode' in _3to2kwargs: pilmode = _3to2kwargs['pilmode']; del _3to2kwargs['pilmode']
+    else: pilmode = 'RGBA'
+    if 'use_threads' in _3to2kwargs: use_threads = _3to2kwargs['use_threads']; del _3to2kwargs['use_threads']
+    else: use_threads = True
+    if 'fps' in _3to2kwargs: fps = _3to2kwargs['fps']; del _3to2kwargs['fps']
+    else: fps = None
     """Load from file and decode a list of numpy arrays with WebP.
 
     Args:
@@ -580,7 +630,8 @@ def save_images(imgs, file_path, **kwargs):
         kwargs: Keyword arguments for saving the images (see `mimwrite`).
     """
     arrs = [np.asarray(img) for img in imgs]
-    return mimwrite(file_path, arrs, **kwargs, pilmode=imgs[0].mode)
+    kwargs.setdefault('pilmode', imgs[0].mode)
+    return mimwrite(file_path, arrs, **kwargs)
 
 
 def load_images(file_path, mode='RGBA', **kwargs):
@@ -594,5 +645,7 @@ def load_images(file_path, mode='RGBA', **kwargs):
     Returns:
         list of PIL.Image: The decoded Images.
     """
-    arrs = mimread(file_path, pilmode=mode, **kwargs)
+    kwargs.setdefault('pilmode', mode)
+
+    arrs = mimread(file_path, **kwargs)
     return [Image.fromarray(arr, mode) for arr in arrs]
