@@ -24,9 +24,9 @@ setup(
     license='MIT',
     long_description=get_long_description(),
     test_suite='tests',
-    setup_requires=['cffi>=1.0.0', 'conan>=1.8.0', 'importlib_resources>=1.0.0'],
+    setup_requires=['astroid<2.0', 'pylint==1.9.3', 'cffi>=1.0.0', 'conan>=1.8.0', 'importlib_resources>=1.0.0'],
     cffi_modules=['webp_build/builder.py:ffibuilder'],
-    install_requires=['cffi>=1.0.0', 'Pillow>=4.0.0', 'numpy>=1.0.0'],
+    install_requires=['enum34>=1.1.6', 'astroid<2.0', 'pylint==1.9.3', 'future>=0.17.1', 'cffi>=1.0.0', 'Pillow>=4.0.0', 'numpy>=1.0.0'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Topic :: Multimedia :: Graphics :: Graphics Conversion',

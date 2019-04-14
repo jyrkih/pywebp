@@ -7,10 +7,8 @@ from builtins import (
          ascii, chr, hex, input, next, oct, open,
          pow, round, super,
          filter, map, zip)
-from builtins import str
 from future import standard_library
 standard_library.install_aliases()
-from builtins import object
 from enum import Enum
 
 import numpy as np
@@ -75,11 +73,7 @@ class WebPConfig(object):
     @staticmethod
     def new(preset=WebPPreset.DEFAULT, quality=75, lossless=False):
         ptr = ffi.new('WebPConfig*')
-        if sys.version_info[0] == 3:
-            _preset = preset.value
-        else:
-            _preset = preset
-        if lib.WebPConfigPreset(ptr, _preset, quality) == 0:
+        if lib.WebPConfigPreset(ptr, preset.value, quality) == 0:
             raise WebPError('failed to load config from preset')
         config = WebPConfig(ptr)
         config.lossless = lossless
@@ -124,12 +118,8 @@ class WebPData(object):
 
         arr = np.empty((dec_config.input.height, dec_config.input.width, bytes_per_pixel),
                        dtype=np.uint8)
-        if sys.version_info[0] == 3:
-            _color_mode = color_mode.value
-        else:
-            _color_mode = color_mode
 
-        dec_config.output.colorspace = _color_mode
+        dec_config.output.colorspace = color_mode.value
         dec_config.output.u.RGBA.rgba = ffi.cast('uint8_t*', ffi.from_buffer(arr))
         dec_config.output.u.RGBA.size = arr.size
         dec_config.output.u.RGBA.stride = dec_config.input.width * bytes_per_pixel
@@ -360,11 +350,7 @@ class WebPAnimDecoderOptions(object):
 
     @color_mode.setter
     def color_mode(self, color_mode):
-        if sys.version_info[0] == 3:
-            _color_mode = color_mode.value
-        else:
-            _color_mode = color_mode
-        self.ptr.color_mode = _color_mode
+        self.ptr.color_mode = color_mode.value
 
     @property
     def use_threads(self):
