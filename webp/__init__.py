@@ -2,18 +2,15 @@ from __future__ import division
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import absolute_import
-from builtins import (
-         bytes, dict, int, list, object, range, str,
-         ascii, chr, hex, input, next, oct, open,
-         pow, round, super,
-         filter, map, zip)
-from future import standard_library
-standard_library.install_aliases()
+from builtins import open
+from builtins import round
+from builtins import str
+from builtins import object
 from enum import Enum
 
 import numpy as np
 from PIL import Image
-import sys
+
 from _webp import ffi, lib
 
 
@@ -118,7 +115,6 @@ class WebPData(object):
 
         arr = np.empty((dec_config.input.height, dec_config.input.width, bytes_per_pixel),
                        dtype=np.uint8)
-
         dec_config.output.colorspace = color_mode.value
         dec_config.output.u.RGBA.rgba = ffi.cast('uint8_t*', ffi.from_buffer(arr))
         dec_config.output.u.RGBA.size = arr.size
@@ -590,7 +586,8 @@ def save_image(img, file_path, **kwargs):
         file_path (str): File to save to.
         kwargs: Keyword arguments for saving the image (see `imwrite`).
     """
-    imwrite(file_path, np.asarray(img), pilmode=img.mode, **kwargs)
+    kwargs.setdefault('pilmode', img.mode)
+    imwrite(file_path, np.asarray(img), **kwargs)
 
 
 def load_image(file_path, mode='RGBA'):
@@ -632,6 +629,5 @@ def load_images(file_path, mode='RGBA', **kwargs):
         list of PIL.Image: The decoded Images.
     """
     kwargs.setdefault('pilmode', mode)
-
     arrs = mimread(file_path, **kwargs)
     return [Image.fromarray(arr, mode) for arr in arrs]

@@ -1,10 +1,3 @@
-from __future__ import unicode_literals
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-from builtins import open
-from future import standard_library
-standard_library.install_aliases()
 import json
 import platform
 import tempfile
@@ -31,7 +24,7 @@ else:
         with open(path.join(tmp_dir, 'conanbuildinfo.json'), 'r') as f:
             conan_info = json.load(f)
     finally:
-        shutil.rmtree(tmp_dir) 
+        shutil.rmtree(tmp_dir)
 
 # Find header files and libraries in libwebp
 extra_objects = []
